@@ -1,0 +1,109 @@
+﻿@page "/reminder"
+@page "/reminder/{number:int}"
+@using Models
+@inject NavigationManager NavigationManager
+
+<PageTitle>@title</PageTitle>
+<h1>To Do List</h1>
+<h3>@title</h3>
+
+@if (reminder is null)
+{
+    <p><em>Loading...</em></p>
+}
+
+else
+{
+    <div class = "row">
+        <div class = "col-sm-4">
+            <EditForm Model = "@reminder" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator/>
+                <ValidationSummary/>
+                <div class = "mb-3">
+                    <label for = "name" class = "form-label">Name:</label>
+                    <InputText id = "name" @bind-Value = "reminder.Name" class = "form-control"></InputText>
+                </div>
+
+                <div class = "mb-3">
+                    <label for = "description" class = "form-label">Description:</label>
+                    <InputText id = "description" @bind-Value = "reminder.Description" class = "form-control"></InputText>
+                </div>
+
+                <div class = "mb-3">
+                    <label for = "time" class = "form-label">Time:</label>
+                    <InputNumber id = "time" @bind-Value = "reminder.Time" class = "form-control"></InputNumber>
+                </div>
+
+                <div class = "mb-3">
+                    <label for = "duedate" class = "form-label">Due Date:</label>
+                    <InputDate id = "name" @bind-Value = "reminder.DueDate" class = "form-control"></InputDate>
+                </div>
+
+                <button type = "sumbit" class = "btn btn-primary">Save</button>
+
+                <button type = "button" class = "btn btn-secondary" @onclick = "@Cancel">Cancel</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+
+@code
+{
+    [Parameter]
+    public int? Number { get; set; }
+
+    private Reminder? reminder;
+
+    private string title = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (Number is not null)
+        {
+            Reminder foundReminder = ReminderClient.GetReminder(Number.Value);
+            reminder = new()
+            {
+                Number = foundReminder.Number,
+                Name = foundReminder.Name,
+                Description = foundReminder.Description,
+                Time = foundReminder.Time,
+                DueDate = foundReminder.DueDate
+            };
+
+            title = $"Edit {reminder.Name}";
+        }
+
+        else
+        {
+            reminder = new()
+            {
+                Name = string.Empty,
+                Description = string.Empty,
+                DueDate = DateTime.UtcNow
+            };
+
+            title = $"New Reminder";
+        }
+    }
+
+    private void HandleSubmit()
+    {
+        if (reminder!.Number == 0)
+        {
+            ReminderClient.AddReminder(reminder);
+        }
+
+        else
+        {
+            ReminderClient.UpdateReminder(reminder);
+        }
+
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}
